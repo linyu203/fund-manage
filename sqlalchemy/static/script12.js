@@ -33,6 +33,7 @@ function rowClicked(){
 		var tds = $(this).find('td');
 		let fundName = $(tds[0]).text();
 		console.log(fundName);
+		window.location.href = "bonds/"+fundName;
 	}
 
 	

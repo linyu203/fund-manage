@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<style>
+	table {
+	  font-family: arial, sans-serif;
+	  border-collapse: collapse;
+	  width: 100%;
+	}
+	
+	th {
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+
+	td {
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+
+	tr:nth-child(even) {
+	  background-color: #dddddd;
+	}
+
+
+/* Style the close button */
+.close {
+  text-align: center;
+  width: 10px;
+  padding: 0;
+  background-color: #f44336;
+}
+
+.close:hover{
+  text-align: center;
+  width: 10px;
+  padding: 0;
+  background-color: #ffff99;
+  cursor: pointer;
+}
+
+/* Style the header */
+.header {
+  background-color: #f44336;
+  padding: 30px 40px;
+  color: white;
+  text-align: center;
+}
+
+/* Clear floats after the header */
+.header:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the input */
+input {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  width: 75%;
+  padding: 10px;
+  float: left;
+  font-size: 16px;
+}
+
+/* Style the "Add" button */
+.addBtn {
+  padding: 10px;
+  width: 25%;
+  background: #d9d9d9;
+  color: #555;
+  float: left;
+  text-align: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+  border-radius: 0;
+}
+
+.addBtn:hover {
+  background-color: #bbb;
+}
+
+</style>
+</head>
+<body>
+
+<div id="head" class="header">
+  <h2 style="margin:5px">Bonds for {{fund.fundName}}:</h2>
+  <input type="text" id="myInput" placeholder="Title...">
+  <span onclick="newElement()" class="addBtn">Add</span>
+</div>
+<div id="description">
+  <p type="text">Description: {{fund.description}}</p>
+  <button id="return" class="btn green">Return</button>
+  <button id="refresh" class="btn green">Refresh</button>
+  
+<table>
+
+</table>
+
+<script>
+// Create a "close" button and append it to each list item
+let demo = [
+	{ Ticker: "Monte Falco1", 'Inserted Time': "Jan 01 2020" },
+	{ Ticker: "Monte Falco2", 'Inserted Time': "Jan 01 2020" },
+	{ Ticker: "Monte Falco3", 'Inserted Time': "Jan 01 2020" },
+	{ Ticker: "Monte Falco4", 'Inserted Time': "Jan 01 2020" },
+	{ Ticker: "Monte Falco5", 'Inserted Time': "Jan 01 2020" },
+];
+
+function generateTableHead(table, data) {
+  let thead = table.createTHead();
+  let row = thead.insertRow();
+  for (let key of data) {
+    let th = document.createElement("th");
+    let text = document.createTextNode(key);
+    th.appendChild(text);
+    row.appendChild(th);
+  }
+}
+function generateTable(table, data) {
+  for (let element of data) {
+    let row = table.insertRow();
+    for (let key in element) {
+      let cell = row.insertCell();
+      let text = document.createTextNode(element[key]);
+      cell.appendChild(text);
+    }
+	var btn = document.createElement('input');
+	btn.type = "close";
+	btn.className = "close";
+	btn.value = "X";
+	btn.onclick = deleteClicked;
+	let bt = row.insertCell();
+	bt.appendChild(btn);
+  }
+}
+
+function deleteClicked(){
+	console.log("Delete icon clicked!");
+	var row = this.parentElement.parentElement;
+	if(row.sectionRowIndex>0){
+		var tds = $(row).find('td')
+		var xhr = new XMLHttpRequest();
+		xhr.open("REMOVE","/bonds/"+{{fund.fundName}},true);
+		xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
+		xhr.send("bond=" + tds[0].text());
+	}
+	
+}
+
+function newElement() {
+	var inputValue = document.getElementById("myInput").value;
+		if (inputValue === '') {
+		alert("You must write something!");
+		return;
+	} 
+	var xhr = new XMLHttpRequest();
+	xhr.open("INSERT","/bonds/"+{{fund.fundName}},true);
+	xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
+	xhr.send("bond=" + inputValue);
+}
+
+function initTable(bonds){
+	let table = document.querySelector("table");
+	let th = Object.keys(demo[0]);
+	th.push("Delete");
+	generateTableHead(table, th);
+	if(bonds){
+		generateTable(table, bonds);
+	}else {
+		generateTable(table, demo);
+	}
+}
+document.getElementById("refresh").addEventListener("click", function () {
+	console.log("refresh clicked");
+	window.location.reload();
+});
+document.getElementById("return").addEventListener("click", function () {
+	console.log("return clicked");
+	//newfund();
+	window.location.href = "/";
+});
+
+var data = {{fund.bonds|tojson|safe}};
+initTable(data);
+
+</script>
+
+</body>
+</html>
