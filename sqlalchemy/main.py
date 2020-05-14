@@ -82,39 +82,39 @@ def bonds_manager(fund_name):
             if parsekey and fund_name:
                 db.insert_bond(fund_name, parsekey)
         except Exception as e:
-	    print(repr(e))
-	    msg = repr(e)
-	
+        print(repr(e))
+        msg = repr(e)
+
     elif request.method == "REMOVE":
-	try:
-	    print(request)
+    try:
+        print(request)
             parsekey = request.form['bond']
-	    print(parsekey)
-	    if parsekey and fund_name:
-	        db.remove_bond(fund_name, parsekey)
-	except Exception as e:
-	    print(repr(e))
-	    msg = repr(e)
-	
+        print(parsekey)
+        if parsekey and fund_name:
+            db.remove_bond(fund_name, parsekey)
+    except Exception as e:
+        print(repr(e))
+        msg = repr(e)
+
     else:
         try:
-	    print(request)
+        print(request)
             parsekey = request.form['bond']
-	    print(parsekey)
-	    if parsekey and fund_name:
-	        db.remove_bond(fund_name, parsekey)
-	except Exception as e:
-	    print(repr(e))
-	    msg = repr(e)
+        print(parsekey)
+        if parsekey and fund_name:
+            db.remove_bond(fund_name, parsekey)
+    except Exception as e:
+        print(repr(e))
+        msg = repr(e)
 
     if msg:
-	fund.fundName = fund_name
-	fund.description = msg
+    fund.fundName = fund_name
+    fund.description = msg
     else:
-	fund.fundName = fund_name
-	fund.description = db.get_fund_description(fund_name)
-	fund.bonds = db.get_bonds_in_fund(fund_name)
-		
+    fund.fundName = fund_name
+    fund.description = db.get_fund_description(fund_name)
+    fund.bonds = db.get_bonds_in_fund(fund_name)
+
     return render_template('BondList.html', fund=fund)
 
 if __name__ == "__main__":

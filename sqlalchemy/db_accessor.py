@@ -167,8 +167,8 @@ def get_fund_description(fundName):
             "select description from funds where name=:fname"
             )
     with db.connect() as conn:
-	    rows = conn.execute(stmt, fname=fundName).fetchall()
-		if rows:
-		    desc = rows[0][0]
-	return desc
+        rows = conn.execute(stmt, fname=fundName).fetchall()
+        if rows:
+            desc = rows[0][0]
+    return desc
 
