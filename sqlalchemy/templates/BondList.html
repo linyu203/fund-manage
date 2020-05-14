@@ -146,17 +146,21 @@ function generateTable(table, data) {
   }
 }
 
-const page="/bonds/"+${{fund.fundName}};
+var page="/bonds/";
+page = page.concat({{fund.fundName}});
 
 function deleteClicked(){
 	console.log("Delete icon clicked!");
 	var row = this.parentElement.parentElement;
 	if(row.sectionRowIndex>0){
 		var tds = $(row).find('td')
+		let newbond = tds[0].text();
+		console.log(newbond)
 		var xhr = new XMLHttpRequest();
 		xhr.open("REMOVE", page, true);
 		xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
-		xhr.send("bond=" + ${tds[0].text()});
+		
+		xhr.send("bond=" + newbond);
 	}
 	
 }
@@ -168,9 +172,9 @@ function newElement() {
 		return;
 	} 
 	var xhr = new XMLHttpRequest();
-	xhr.open("INSERT","/bonds/"+{{fund.fundName}},true);
+	xhr.open("INSERT", page, true);
 	xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
-	xhr.send("bond=" + ${inputValue});
+	xhr.send("bond=" + inputValue);
 }
 
 function initTable(bonds){
