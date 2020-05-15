@@ -128,37 +128,55 @@ function generateTableHead(table, data) {
     row.appendChild(th);
   }
 }
-function generateTable(table, data) {
+function generateTable(table, data, th) {
   for (let element of data) {
     let row = table.insertRow();
-    for (let key in element) {
+    for (let key in th) {
+      if(element[th[key]] !== undefined){
       let cell = row.insertCell();
-      let text = document.createTextNode(element[key]);
+      let text = document.createTextNode(element[th[key]]);
       cell.appendChild(text);
+      } else {
+    
+      var btn = document.createElement('input');
+      btn.type = "close";
+      btn.className = "close";
+      btn.value = "X";
+      btn.onclick = deleteClicked;
+      let bt = row.insertCell();
+      bt.appendChild(btn);
+      }
     }
-	var btn = document.createElement('input');
-	btn.type = "close";
-	btn.className = "close";
-	btn.value = "X";
-	btn.onclick = deleteClicked;
-	let bt = row.insertCell();
-	bt.appendChild(btn);
   }
 }
 
 var page="/bonds/";
-page = page.concat({{fund.fundName}});
+var fn = (`{{fund.fundName}}`).toString();
+page = page.concat(fn);
+
+function checkResponse(){
+	console.log(this.readyState);
+	if(this.readyState === 4){
+		if(!window.alert(this.responseText)) {
+			window.location.reload();
+		}
+
+	}
+}
+
 
 function deleteClicked(){
 	console.log("Delete icon clicked!");
 	var row = this.parentElement.parentElement;
 	if(row.sectionRowIndex>0){
-		var tds = $(row).find('td')
-		let newbond = tds[0].text();
+		var tds = $(row).find('td');
+		console.log(tds);
+		let newbond = $(tds[0]).text();
 		console.log(newbond)
 		var xhr = new XMLHttpRequest();
-		xhr.open("REMOVE", page, true);
-		xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
+		xhr.onreadystatechange = checkResponse;
+		xhr.open("DELETE", page, true);
+		xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
 		
 		xhr.send("bond=" + newbond);
 	}
@@ -172,8 +190,9 @@ function newElement() {
 		return;
 	} 
 	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = checkResponse;
 	xhr.open("INSERT", page, true);
-	xhr.setRequestHeader("Content-Type","application/x-www-urlencoded");
+	xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
 	xhr.send("bond=" + inputValue);
 }
 
@@ -183,9 +202,9 @@ function initTable(bonds){
 	th.push("Delete");
 	generateTableHead(table, th);
 	if(bonds){
-		generateTable(table, bonds);
+		generateTable(table, bonds, th);
 	}else {
-		generateTable(table, demo);
+		generateTable(table, demo, th);
 	}
 }
 document.getElementById("refresh").addEventListener("click", function () {

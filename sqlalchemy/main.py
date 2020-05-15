@@ -70,7 +70,7 @@ def create_fund():
     
     return render_template('NewFund.html', action="Create Fund", fund={})
 
-@app.route("/bonds/<fund_name>", methods=["GET","INSERT","REMOVE"])
+@app.route("/bonds/<fund_name>", methods=["GET","DELETE","INSERT"])
 def bonds_manager(fund_name):
     print("bonds_manager called method: ", request.method)
     msg = ""
@@ -81,37 +81,35 @@ def bonds_manager(fund_name):
             print(parsekey)
             if parsekey and fund_name:
                 db.insert_bond(fund_name, parsekey)
+                return Response(status=200, response="bond {} inserted into fund {}".format(parsekey, fund_name))
         except Exception as e:
             print(repr(e))
             msg = repr(e)
+        return Response(status=500,response=msg)
 
-    elif request.method == "REMOVE":
+    elif request.method == "DELETE":
         try:
+            print("int remvove block!")
             print(request)
             parsekey = request.form['bond']
             print(parsekey)
             if parsekey and fund_name:
                 db.remove_bond(fund_name, parsekey)
+            return Response(status=200, response="bond {} was deleted from fund {}".format(parsekey, fund_name))
         except Exception as e:
             print(repr(e))
             msg = repr(e)
+            return Response(status=500, response=msg)
 
-    else:
-        pass
+    else: ## GET
 
-    fund = {}
-    if msg:
-        fund["fundName"] = fund_name
-        fund["description"] = msg
-    else:
+        fund = {}
         fund["fundName"] = fund_name
         fund["description"] = db.get_fund_description(fund_name)
         fund["bonds"] = db.get_bonds_in_fund(fund_name)
 
-    print(fund)
-    return render_template('BondList.html', fund=fund)
+        return render_template('BondList.html', fund=fund)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)
-
 
