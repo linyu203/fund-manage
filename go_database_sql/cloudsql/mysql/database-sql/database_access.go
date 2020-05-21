@@ -19,205 +19,220 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"math"
-	"os"
-	"strconv"
-
-	"github.com/go-sql-driver/mysql"
+    "database/sql"
+    "fmt"
+    "log"
+    "math"
+    "os"
+    "strconv"
+    "github.com/go-sql-driver/mysql"
 )
 
 // db is the global database connection pool.
 var db *sql.DB
 
-// parsedTemplate is the global parsed HTML template.
-// vote struct contains a single row from the votes table in the database.
-// Each vote includes a candidate ("TABS" or "SPACES") and a timestamp.
-type vote struct {
-	Candidate string
-	VoteTime  mysql.NullTime
+type Fund struct {
+    Name string
+    Count int
+    Description string
+    Creation  mysql.NullTime
 }
 
-// voteDiff is used to provide a string representation of the current voting
-// margin, such as "1 vote" (singular) or "2 votes" (plural).
-type voteDiff int
+type Description string
 
-
-// templateData struct is used to pass data to the HTML template.
-type templateData struct {
-	TabsCount   uint
-	SpacesCount uint
-	VoteMargin  string
-	RecentVotes []vote
+type Bond struct {
+    Parsekey string
+    Creation mysql.NullTime
 }
 
 func InitTable() {
-	var err error
+    var err error
+    db, err = initSocketConnectionPool()
+    if err != nil {
+        log.Fatalf("initSocketConnectionPool: unable to connect: %s", err)
+    }
 
-	db, err = initSocketConnectionPool()
-	if err != nil {
-		log.Fatalf("initSocketConnectionPool: unable to connect: %s", err)
-	}
-
-	// Create the funds and bonds tables if it does not already exist.
-	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS funds
-	( name varchar(31) NOT NULL, 
-	  description varchar(101) NOT NULL, 
-	  creation datetime NOT NULL, 
-	  RPIMARY KEY (name) );`); err != nil {
-		log.Fatalf("DB.Exec: unable to create table: %s", err)
-	}
-	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS bonds
-	( fundName varchar(31) NOT NULL, 
-	  parsekey varchar(41) NOT NULL, 
-	  creation datetime NOT NULL );`); err != nil {
-		log.Fatalf("DB.Exec: unable to create table: %s", err)
-	}
-
+    // Create the funds and bonds tables if it does not already exist.
+    if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS funds
+    ( name varchar(31) NOT NULL, 
+      description varchar(101) NOT NULL, 
+      creation datetime NOT NULL, 
+      RPIMARY KEY (name) );`); err != nil {
+        log.Fatalf("DB.Exec: unable to create table: %s", err)
+    }
+    if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS bonds
+    ( fundName varchar(31) NOT NULL, 
+      parsekey varchar(41) NOT NULL, 
+      creation datetime NOT NULL );`); err != nil {
+        log.Fatalf("DB.Exec: unable to create table: %s", err)
+    }
 }
 
-// recentVotes returns a slice of the last 5 votes cast.
-func recentVotes() ([]vote, error) {
-	var votes []vote
-	rows, err := db.Query(`SELECT candidate, time_cast FROM votes ORDER BY time_cast DESC LIMIT 5`)
-	if err != nil {
-		return votes, fmt.Errorf("DB.Query: %v", err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		nextVote := vote{}
-		err := rows.Scan(&nextVote.Candidate, &nextVote.VoteTime)
-		if err != nil {
-			return votes, fmt.Errorf("Rows.Scan: %v", err)
-		}
-		votes = append(votes, nextVote)
-	}
-	return votes, nil
+func CreateFund(name, description string) error {
+    sqlInsert := "INSERT INTO funds (name, description, creation) VALUES (?, ?, NOW())"
+    if team != "" && description != "" {
+        if _, err := db.Exec(sqlInsert, name, description); err != nil {
+            return fmt.Errorf("DB.Exec: %v", err)
+        } else {
+            fmt.Printf("Create fund successfully fund name %s!, decription %s\n", team, description)
+            return nil
+        }
+    }
+    return fmt.Errorf("fund name and description should not be empty!");
+    // [END cloud_sql_mysql_databasesql_connection]
 }
 
-// currentTotals returns a templateData structure for populating the web page.
-func currentTotals() (templateData, error) {
-
-	// get total votes for each candidate
-	var tabVotes, spaceVotes uint
-	err := db.QueryRow(`SELECT count(vote_id) FROM votes WHERE candidate='TABS'`).Scan(&tabVotes)
-	if err != nil {
-		return templateData{}, fmt.Errorf("DB.QueryRow: %v", err)
-	}
-	err = db.QueryRow(`SELECT count(vote_id) FROM votes WHERE candidate='SPACES'`).Scan(&spaceVotes)
-	if err != nil {
-		return templateData{}, fmt.Errorf("DB.QueryRow: %v", err)
-	}
-
-	var voteDiffStr string = voteDiff(int(math.Abs(float64(tabVotes) - float64(spaceVotes)))).String()
-
-	latestVotesCast, err := recentVotes()
-	if err != nil {
-		return templateData{}, fmt.Errorf("recentVotes: %v", err)
-	}
-	return templateData{tabVotes, spaceVotes, voteDiffStr, latestVotesCast}, nil
-
+func InsertBond(fundName, parsekey string) error {
+    sqlInsert := "INSERT INTO bonds (fundName, parsekey, creation) VALUES (?, ?, NOW())"
+    if fundName != "" && parsekey != "" {
+        if _, err := db.Exec(sqlInsert, fundName, parsekey); err != nil {
+            return fmt.Errorf("DB.Exec: %v", err)
+        } else {
+            fmt.Printf("insert bond %s into fund %s successfully.\n", parsekey, fundName)
+            return nil
+        }
+    }
+    return fmt.Errorf("fund name and parsekey should not be empty!");
+    // [END cloud_sql_mysql_databasesql_connection]
 }
 
-// showTotals renders an HTML template showing the current vote totals.
-func showTotals(w http.ResponseWriter, r *http.Request) error {
-
-	totals, err := currentTotals()
-	if err != nil {
-		return fmt.Errorf("currentTotals: %v", err)
-	}
-	err = parsedTemplate.Execute(w, totals)
-	if err != nil {
-		return fmt.Errorf("Template.Execute: %v", err)
-	}
-	return nil
+func RemoveBond(fundName, parsekey string) error {
+    sqlDelete := "delete from bonds where fundName=? and parsekey=?"
+    if fundName != "" && parsekey != "" {
+        if _, err := db.Exec(sqlDelete, fundName, parsekey); err != nil {
+            return fmt.Errorf("DB.Exec: %v", err)
+        } else {
+            fmt.Printf("Delete bond %s from fund %s successfully.\n", parsekey, fundName)
+            return nil
+        }
+    }
+    return fmt.Errorf("fund name and parsekey should not be empty!");
+    // [END cloud_sql_mysql_databasesql_connection]
 }
 
-// saveVote saves a vote passed as http.Request form data.
-func saveVote(w http.ResponseWriter, r *http.Request) error {
-	if err := r.ParseForm(); err != nil {
-		return fmt.Errorf("Request.ParseForm: %v", err)
-	}
+func RemoveFund(fundName string) error {
+    sqlDeleteBonds := "delete from bonds where fundName=?"
+    sqlDeleteFund := "delete from funds where fundName=?"
+    if fundName != ""{
+        if _, err := db.Exec(sqlDeleteBonds, fundName); err != nil {
+            return fmt.Errorf("DB.Exec: %v", err)
+        } else if _, err := db.Exec(sqlDeleteFund, fundName); err != nil{
+            return fmt.Errorf("DB.Exec: %v", err)
+        } else {
+            fmt.Printf("Delete fund %s successfully.\n", fundName)
+            return nil
+        }
+    }
+    return fmt.Errorf("the fund name should not be empty!");
+    // [END cloud_sql_mysql_databasesql_connection]
+}
 
-	var team string
-	if teamprop, ok := r.Form["team"]; ok {
-		team = teamprop[0]
-	} else {
-		return fmt.Errorf("team property missing from form submission")
-	}
+func getAllfunds() ([]Fund, error){
+    var funds []Fund
+    rows,err := db.Query(`
+        select f.name, count(b.parsekey) as count, f.description, f.creation
+        from funds as f
+        left join bonds as b on b.fundName=f.name
+        group by f.name
+        `)
+    if err != nil {
+        return funds, fmt.Errorf("DB.Query: %v", err)
+    }
+    defer rows.close()
+    for rows.Next() {
+        nextfund := Fund{}
+        err := rows.Scan(&nextfund.Name, &nextfund.Count, &nextfund.Description, &nextfund.Creation)
+        if err != nil {
+            return funds, fmt.Errorf("Rows.Scan: %v", err)
+        }
+        funds = append(funds, nextfund)
+    }
+    return votes, nil
+}
 
-	// [START cloud_sql_mysql_databasesql_connection]
-	sqlInsert := "INSERT INTO votes (candidate) VALUES (?)"
-	if team == "TABS" || team == "SPACES" {
-		if _, err := db.Exec(sqlInsert, team); err != nil {
-			fmt.Fprintf(w, "unable to save vote: %s", err)
-			return fmt.Errorf("DB.Exec: %v", err)
-		} else {
-			fmt.Fprintf(w, "Vote successfully cast for %s!\n", team)
-		}
-	}
-	return nil
-	// [END cloud_sql_mysql_databasesql_connection]
+func getbonds(fundName string) ([]Bond, error){
+    var bonds []Bond
+    rows,err := db.Query(`select parsekey, creation from bonds where fundName = ?`, fundName)
+    if err != nil {
+        return bonds, fmt.Errorf("DB.Query: %v", err)
+    }
+    defer rows.close()
+    for rows.Next() {
+        nextbond := Bond{}
+        err := rows.Scan(&nextbond.Parsekey, &nextbond.Creation)
+        if err != nil {
+            return bonds, fmt.Errorf("Rows.Scan: %v", err)
+        }
+        bonds = append(bonds, nextbond)
+    }
+    return bonds, nil
+}
+
+func getDescription(fundName string) (string, error){
+    var description string
+    err := db.Queryrow(`select description from funds where name=?`, fundName).Scan(&description)
+    if err != nil {
+        return description, fmt.Errorf("DB.Query: %v", err)
+    }
+    return description, nil
 }
 
 // mustGetEnv is a helper function for getting environment variables.
 // Displays a warning if the environment variable is not set.
 func mustGetenv(k string) string {
-	v := os.Getenv(k)
-	if v == "" {
-		log.Printf("Warning: %s environment variable not set.\n", k)
-	}
-	return v
+    v := os.Getenv(k)
+    if v == "" {
+        log.Printf("Warning: %s environment variable not set.\n", k)
+    }
+    return v
 }
 
 // initSocketConnectionPool initializes a Unix socket connection pool for
 // a Cloud SQL instance of MySQL.
 func initSocketConnectionPool() (*sql.DB, error) {
-	// [START cloud_sql_mysql_databasesql_create_socket]
-	var (
-		dbUser                 = mustGetenv("DB_USER")
-		dbPwd                  = mustGetenv("DB_PASS")
-		instanceConnectionName = mustGetenv("CLOUD_SQL_CONNECTION_NAME")
-		dbName                 = mustGetenv("DB_NAME")
-	)
+    // [START cloud_sql_mysql_databasesql_create_socket]
+    var (
+        dbUser                 = mustGetenv("DB_USER")
+        dbPwd                  = mustGetenv("DB_PASS")
+        instanceConnectionName = mustGetenv("CLOUD_SQL_CONNECTION_NAME")
+        dbName                 = mustGetenv("DB_NAME")
+    )
 
-	var dbURI string
-	dbURI = fmt.Sprintf("%s:%s@unix(/cloudsql/%s)/%s", dbUser, dbPwd, instanceConnectionName, dbName)
+    var dbURI string
+    dbURI = fmt.Sprintf("%s:%s@unix(/cloudsql/%s)/%s", dbUser, dbPwd, instanceConnectionName, dbName)
 
-	// dbPool is the pool of database connections.
-	dbPool, err := sql.Open("mysql", dbURI)
-	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %v", err)
-	}
+    // dbPool is the pool of database connections.
+    dbPool, err := sql.Open("mysql", dbURI)
+    if err != nil {
+        return nil, fmt.Errorf("sql.Open: %v", err)
+    }
 
-	// [START_EXCLUDE]
-	configureConnectionPool(dbPool)
-	// [END_EXCLUDE]
+    // [START_EXCLUDE]
+    configureConnectionPool(dbPool)
+    // [END_EXCLUDE]
 
-	return dbPool, nil
-	// [END cloud_sql_mysql_databasesql_create_socket]
+    return dbPool, nil
+    // [END cloud_sql_mysql_databasesql_create_socket]
 }
 
 
 // configureConnectionPool sets database connection pool properties.
 // For more information, see https://golang.org/pkg/database/sql
 func configureConnectionPool(dbPool *sql.DB) {
-	// [START cloud_sql_mysql_databasesql_limit]
+    // [START cloud_sql_mysql_databasesql_limit]
 
-	// Set maximum number of connections in idle connection pool.
-	dbPool.SetMaxIdleConns(5)
+    // Set maximum number of connections in idle connection pool.
+    dbPool.SetMaxIdleConns(5)
 
-	// Set maximum number of open connections to the database.
-	dbPool.SetMaxOpenConns(7)
+    // Set maximum number of open connections to the database.
+    dbPool.SetMaxOpenConns(7)
 
-	// [END cloud_sql_mysql_databasesql_limit]
+    // [END cloud_sql_mysql_databasesql_limit]
 
-	// [START cloud_sql_mysql_databasesql_lifetime]
+    // [START cloud_sql_mysql_databasesql_lifetime]
 
-	// Set Maximum time (in seconds) that a connection can remain open.
-	dbPool.SetConnMaxLifetime(1800)
+    // Set Maximum time (in seconds) that a connection can remain open.
+    dbPool.SetConnMaxLifetime(1800)
 
-	// [END cloud_sql_mysql_databasesql_lifetime]
+    // [END cloud_sql_mysql_databasesql_lifetime]
 }
