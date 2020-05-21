@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <title>Debt Fund Managerment</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<style>
+	table {
+	  font-family: arial, sans-serif;
+	  border-collapse: collapse;
+	  width: 100%;
+	}
+	
+	th {
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+
+	td {
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  padding: 8px;
+	}
+	tr:hover {
+	  background-color: #ffff99;
+	}
+
+	tr:nth-child(even) {
+	  background-color: #dddddd;
+	}
+	tr:hover {
+	  background-color: #ffff99;
+	}
+	</style>
+</head>
+<body>
+<nav class="red lighten-1">
+    <div class="nav-wrapper">
+        <a href="#" class="brand-logo center">Debt Fund Management</a>
+    </div>
+</nav>
+<button id="CNF" class="btn green">Create New Fund</button>
+<!--button id="CF" class="btn green">Copy Fund</button-->
+<button id="RFR" class="btn green">Refresh</button>
+<!--a href="/fund">Create New Fund</a-->
+<table>
+</table>
+<script>
+    //location.reload(true);
+</script>
+
+<script src="{{ url_for('static', filename='fund.js') }}"></script>
+<script>
+    var data = {{funds|tojson|safe}}
+    loadPage(data);
+</script>
+
+</body>
+</html>
