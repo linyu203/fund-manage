@@ -21,10 +21,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log"
 	"math"
-	"net/http"
 	"os"
 	"strconv"
 
@@ -35,8 +33,6 @@ import (
 var db *sql.DB
 
 // parsedTemplate is the global parsed HTML template.
-var parsedTemplate *template.Template
-
 // vote struct contains a single row from the votes table in the database.
 // Each vote includes a candidate ("TABS" or "SPACES") and a timestamp.
 type vote struct {
@@ -48,12 +44,6 @@ type vote struct {
 // margin, such as "1 vote" (singular) or "2 votes" (plural).
 type voteDiff int
 
-func (v voteDiff) String() string {
-	if v == 1 {
-		return "1 vote"
-	}
-	return strconv.Itoa(int(v)) + " votes"
-}
 
 // templateData struct is used to pass data to the HTML template.
 type templateData struct {
@@ -63,66 +53,29 @@ type templateData struct {
 	RecentVotes []vote
 }
 
-func main() {
+func InitTable() {
 	var err error
 
-	parsedTemplate, err = template.ParseFiles("templates/index.html")
+	db, err = initSocketConnectionPool()
 	if err != nil {
-		log.Fatalf("unable to parse template file: %s", err)
+		log.Fatalf("initSocketConnectionPool: unable to connect: %s", err)
 	}
 
-	// If the optional DB_TCP_HOST environment variable is set, it contains
-	// the IP address and port number of a TCP connection pool to be created,
-	// such as "127.0.0.1:3306". If DB_TCP_HOST is not set, a Unix socket
-	// connection pool will be created instead.
-	if os.Getenv("DB_TCP_HOST") != "" {
-		db, err = initTcpConnectionPool()
-		if err != nil {
-			log.Fatalf("initTcpConnectionPool: unable to connect: %s", err)
-		}
-	} else {
-		db, err = initSocketConnectionPool()
-		if err != nil {
-			log.Fatalf("initSocketConnectionPool: unable to connect: %s", err)
-		}
+	// Create the funds and bonds tables if it does not already exist.
+	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS funds
+	( name varchar(31) NOT NULL, 
+	  description varchar(101) NOT NULL, 
+	  creation datetime NOT NULL, 
+	  RPIMARY KEY (name) );`); err != nil {
+		log.Fatalf("DB.Exec: unable to create table: %s", err)
 	}
-
-	// Create the votes table if it does not already exist.
-	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS votes
-	( vote_id SERIAL NOT NULL, time_cast timestamp NOT NULL,
-	candidate CHAR(6) NOT NULL, PRIMARY KEY (vote_id) );`); err != nil {
+	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS bonds
+	( fundName varchar(31) NOT NULL, 
+	  parsekey varchar(41) NOT NULL, 
+	  creation datetime NOT NULL );`); err != nil {
 		log.Fatalf("DB.Exec: unable to create table: %s", err)
 	}
 
-	http.HandleFunc("/", indexHandler)
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Printf("Listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
-	}
-
-}
-
-// indexHandler handles requests to the / route.
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		if err := showTotals(w, r); err != nil {
-			log.Printf("showTotals: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-	case "POST":
-		if err := saveVote(w, r); err != nil {
-			log.Printf("saveVote: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-	default:
-		http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
-	}
 }
 
 // recentVotes returns a slice of the last 5 votes cast.
@@ -247,33 +200,6 @@ func initSocketConnectionPool() (*sql.DB, error) {
 	// [END cloud_sql_mysql_databasesql_create_socket]
 }
 
-// initTcpConnectionPool initializes a TCP connection pool for a Cloud SQL
-// instance of MySQL.
-func initTcpConnectionPool() (*sql.DB, error) {
-	// [START cloud_sql_mysql_databasesql_create_tcp]
-	var (
-		dbUser    = mustGetenv("DB_USER")
-		dbPwd     = mustGetenv("DB_PASS")
-		dbTcpHost = mustGetenv("DB_TCP_HOST")
-		dbName    = mustGetenv("DB_NAME")
-	)
-
-	var dbURI string
-	dbURI = fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPwd, dbTcpHost, dbName)
-
-	// dbPool is the pool of database connections.
-	dbPool, err := sql.Open("mysql", dbURI)
-	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %v", err)
-	}
-
-	// [START_EXCLUDE]
-	configureConnectionPool(dbPool)
-	// [END_EXCLUDE]
-
-	return dbPool, nil
-	// [END cloud_sql_mysql_databasesql_create_tcp]
-}
 
 // configureConnectionPool sets database connection pool properties.
 // For more information, see https://golang.org/pkg/database/sql
