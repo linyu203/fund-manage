@@ -1,94 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Bonds Detail For {{fund.fundName}}</title>
+    <title>Bonds Detail For {{.FundName}}</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <style>
-	table {
-	  font-family: arial, sans-serif;
-	  border-collapse: collapse;
-	  width: 100%;
-	}
-	
-	th {
-	  border: 1px solid #dddddd;
-	  text-align: left;
-	  padding: 8px;
-	}
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
 
-	td {
-	  border: 1px solid #dddddd;
-	  text-align: left;
-	  padding: 8px;
-	}
+th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
 
-	tr:nth-child(even) {
-	  background-color: #dddddd;
-	}
+td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
 
 
 /* Style the close button */
 .close {
-  text-align: center;
-  width: 10px;
-  padding: 0;
-  background-color: #f44336;
+    text-align: center;
+    width: 10px;
+    padding: 0;
+    background-color: #f44336;
 }
 
 .close:hover{
-  text-align: center;
-  width: 10px;
-  padding: 0;
-  background-color: #ffff99;
-  cursor: pointer;
+    text-align: center;
+    width: 10px;
+    padding: 0;
+    background-color: #ffff99;
+    cursor: pointer;
 }
 
 /* Style the header */
 .header {
-  background-color: #f44336;
-  padding: 30px 40px;
-  color: white;
-  text-align: center;
+    background-color: #f44336;
+    padding: 30px 40px;
+    color: white;
+    text-align: center;
 }
 
 /* Clear floats after the header */
 .header:after {
-  content: "";
-  display: table;
-  clear: both;
+    content: "";
+    display: table;
+    clear: both;
 }
 
 /* Style the input */
 input {
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  width: 75%;
-  padding: 10px;
-  float: left;
-  font-size: 16px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    width: 75%;
+    padding: 10px;
+    float: left;
+    font-size: 16px;
 }
 
 /* Style the "Add" button */
 .addBtn {
-  padding: 10px;
-  width: 25%;
-  background: #d9d9d9;
-  color: #555;
-  float: left;
-  text-align: center;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
-  border-radius: 0;
+    padding: 10px;
+    width: 25%;
+    background: #d9d9d9;
+    color: #555;
+    float: left;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 0;
 }
 
 .addBtn:hover {
-  background-color: #bbb;
+    background-color: #bbb;
 }
 
 </style>
@@ -96,15 +96,14 @@ input {
 <body>
 
 <div id="head" class="header">
-  <h2 style="margin:5px">Bonds for {{fund.fundName}}:</h2>
-  <input type="text" id="myInput" placeholder="Title...">
-  <span onclick="newElement()" class="addBtn">Add</span>
+    <h2 style="margin:5px">Bonds for {{.FundName}}:</h2>
+    <input type="text" id="myInput" placeholder="Title...">
+    <span onclick="newElement()" class="addBtn">Add</span>
 </div>
 <div id="description">
-  <p type="text">Description: {{fund.description}}</p>
-  <button id="return" class="btn green">Return</button>
-  <button id="refresh" class="btn green">Refresh</button>
-  
+    <p type="text">Description: {{.Description}}</p>
+    <button id="return" class="btn green">Return</button>
+    <button id="refresh" class="btn green">Refresh</button>
 <table>
 
 </table>
@@ -112,114 +111,116 @@ input {
 <script>
 // Create a "close" button and append it to each list item
 let demo = [
-	{ Ticker: "Monte Falco1", 'Inserted Time': "Jan 01 2020" },
-	{ Ticker: "Monte Falco2", 'Inserted Time': "Jan 01 2020" },
-	{ Ticker: "Monte Falco3", 'Inserted Time': "Jan 01 2020" },
-	{ Ticker: "Monte Falco4", 'Inserted Time': "Jan 01 2020" },
-	{ Ticker: "Monte Falco5", 'Inserted Time': "Jan 01 2020" },
+    { Ticker: "Monte Falco1", 'Inserted Time': "Jan 01 2020" },
+    { Ticker: "Monte Falco2", 'Inserted Time': "Jan 01 2020" },
+    { Ticker: "Monte Falco3", 'Inserted Time': "Jan 01 2020" },
+    { Ticker: "Monte Falco4", 'Inserted Time': "Jan 01 2020" },
+    { Ticker: "Monte Falco5", 'Inserted Time': "Jan 01 2020" },
 ];
-
 function generateTableHead(table, data) {
-  let thead = table.createTHead();
-  let row = thead.insertRow();
-  for (let key of data) {
-    let th = document.createElement("th");
-    let text = document.createTextNode(key);
-    th.appendChild(text);
-    row.appendChild(th);
-  }
+    let thead = table.createTHead();
+    let row = thead.insertRow();
+    for (let key of data) {
+        let th = document.createElement("th");
+        let text = document.createTextNode(key);
+        th.appendChild(text);
+        row.appendChild(th);
+    }
 }
 function generateTable(table, data, th) {
-  for (let element of data) {
-    let row = table.insertRow();
-    for (let key in th) {
-      if(element[th[key]] !== undefined){
-      let cell = row.insertCell();
-      let text = document.createTextNode(element[th[key]]);
-      cell.appendChild(text);
-      } else {
-    
-      var btn = document.createElement('input');
-      btn.type = "close";
-      btn.className = "close";
-      btn.value = "X";
-      btn.onclick = deleteClicked;
-      let bt = row.insertCell();
-      bt.appendChild(btn);
-      }
+    for (let element of data) {
+        let row = table.insertRow();
+        for (let key in th) {
+            if(element[th[key]] !== undefined){
+                let cell = row.insertCell();
+                let text = document.createTextNode(element[th[key]]);
+                cell.appendChild(text);
+            } else {
+                var btn = document.createElement('input');
+                btn.type = "close";
+                btn.className = "close";
+                btn.value = "X";
+                btn.onclick = deleteClicked;
+                let bt = row.insertCell();
+                bt.appendChild(btn);
+            }
+        }
     }
-  }
 }
-
 var page="/bonds/";
-var fn = (`{{fund.fundName}}`).toString();
+var fn = (`{{.fundName}}`).toString();
 page = page.concat(fn);
-
 function checkResponse(){
-	console.log(this.readyState);
-	if(this.readyState === 4){
-		if(!window.alert(this.responseText)) {
-			window.location.reload();
-		}
+    console.log(this.readyState);
+    if(this.readyState === 4){
+        if(!window.alert(this.responseText)) {
+            window.location.reload();
+        }
 
-	}
+    }
 }
-
-
 function deleteClicked(){
-	console.log("Delete icon clicked!");
-	var row = this.parentElement.parentElement;
-	if(row.sectionRowIndex>0){
-		var tds = $(row).find('td');
-		console.log(tds);
-		let newbond = $(tds[0]).text();
-		console.log(newbond)
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = checkResponse;
-		xhr.open("DELETE", page, true);
-		xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-		
-		xhr.send("bond=" + newbond);
-	}
-	
+    console.log("Delete icon clicked!");
+    var row = this.parentElement.parentElement;
+    if(row.sectionRowIndex>0){
+        var tds = $(row).find('td');
+        console.log(tds);
+        let newbond = $(tds[0]).text();
+        console.log(newbond)
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = checkResponse;
+        xhr.open("DELETE", page, true);
+        xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+        xhr.send("bond=" + newbond);
+    }
+    
 }
 
 function newElement() {
-	var inputValue = document.getElementById("myInput").value;
-		if (inputValue === '') {
-		alert("You must write something!");
-		return;
-	} 
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = checkResponse;
-	xhr.open("INSERT", page, true);
-	xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-	xhr.send("bond=" + inputValue);
+    var inputValue = document.getElementById("myInput").value;
+        if (inputValue === '') {
+        alert("You must write something!");
+        return;
+    } 
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = checkResponse;
+    xhr.open("INSERT", page, true);
+    xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+    xhr.send("bond=" + inputValue);
 }
 
 function initTable(bonds){
-	let table = document.querySelector("table");
-	let th = Object.keys(demo[0]);
-	th.push("Delete");
-	generateTableHead(table, th);
-	if(bonds){
-		generateTable(table, bonds, th);
-	}else {
-		generateTable(table, demo, th);
-	}
+    let table = document.querySelector("table");
+    let th = Object.keys(demo[0]);
+    th.push("Delete");
+    generateTableHead(table, th);
+    if(bonds){
+        generateTable(table, bonds, th);
+    }else {
+        generateTable(table, demo, th);
+    }
 }
 document.getElementById("refresh").addEventListener("click", function () {
-	console.log("refresh clicked");
-	window.location.reload();
+    console.log("refresh clicked");
+    window.location.reload();
 });
 document.getElementById("return").addEventListener("click", function () {
-	console.log("return clicked");
-	//newfund();
-	window.location.href = "/";
+    console.log("return clicked");
+    //newfund();
+    window.location.href = "/";
 });
 
-var data = {{fund.bonds|tojson|safe}};
-initTable(data);
+var bonds = []
+var tempCt
+{{range .Bonds}}
+    tempCt = {{.Creation}}
+    bond = {
+        Ticker : {{.Parsekey}},
+        'Inserted Time': tempCt.Time,
+    }
+    bonds.push(bond)
+{{end}}
+initTable(bonds);
 
 </script>
 
