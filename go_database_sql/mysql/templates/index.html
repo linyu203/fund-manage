@@ -52,11 +52,10 @@
     //location.reload(true);
 </script>
 
-<script src="{{ url_for('static', filename='fund.js') }}"></script>
 <script>
-	console.log(.)
 	{{ range .}}
-		console.log(.)
+		console.log({{.Name}})
+		console.log({{.Count}}, {{.Description}})
 	{{end}}
     //loadPage(data);
 </script>

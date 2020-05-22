@@ -2,16 +2,11 @@
 package main
 
 import (
-    "database/sql"
     "fmt"
     "html/template"
     "log"
-    "math"
     "net/http"
     "os"
-    "strconv"
-
-    "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -25,10 +20,10 @@ func initTemplates() {
     var err error = nil
     indexTmpl, err = template.ParseFiles("templates/index.html")
     if err == nil {
-        bondListTmpl, err = template.ParseFiles("templates/BondList.html")
+        //bondListTmpl, err = template.ParseFiles("templates/BondList.html")
     }
     if err == nil {
-        newFundTmpl, err = template.ParseFiles("templates/NewFund.html")
+        //newFundTmpl, err = template.ParseFiles("templates/NewFund.html")
     }
     if err != nil {
         log.Fatalf("unable to parse template file: %s", err)
@@ -52,14 +47,14 @@ func getAllFundHandler(w http.ResponseWriter, r *http.Request) {
     case "GET":
         funds, err := GetAllfunds()
         if err != nil {
-            log.Printf("showTotals: %v", err)
+            log.Printf("Get all funds: %v", err)
             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
             return
         }
-        err = indexTmpl.Execute(w, funds)
-        
+	err = indexTmpl.Execute(w, funds)
+	fmt.Printf("funds: %#v\n", funds)
         if err != nil {
-            http.Errorf("Template.Execute: %v", err)
+	    log.Printf("Transefor to html error: %v", err)
         }
     default:
         http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
