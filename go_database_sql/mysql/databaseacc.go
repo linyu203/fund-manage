@@ -17,8 +17,6 @@ type Fund struct {
     Creation  mysql.NullTime
 }
 
-type Description string
-
 type Bond struct {
     Parsekey string
     Creation mysql.NullTime

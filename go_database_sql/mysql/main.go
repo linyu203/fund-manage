@@ -32,7 +32,6 @@ func initTemplates() {
 }
 
 func regestHandler(){
-
     r := mux.NewRouter()
     r.HandleFunc("/", getAllFundHandler)
     r.HandleFunc("/bonds/{fund:[0-9a-zA-Z_\\- ]+}", bondsHandler)
@@ -40,12 +39,17 @@ func regestHandler(){
     http.Handle("/",r)
     port := os.Getenv("PORT")
     if port == "" {
-	port = ":8080"
+        port = ":8080"
     }
     log.Printf("Listening on port %s", port)
     if err := http.ListenAndServe(port, nil); err != nil {
         log.Fatal(err)
     }
+}
+type FundDetail struct {
+    FundName string
+    Descption string
+    Bonds []Bond
 }
 
 func bondsHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,16 +58,36 @@ func bondsHandler(w http.ResponseWriter, r *http.Request) {
     
     switch r.Method {
     case "GET":
-        funds, err := GetAllfunds()
+        bonds, err := Getbonds(fundName)
         if err != nil {
             log.Printf("Get all funds: %v", err)
             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
             return
         }
-        err = indexTmpl.Execute(w, funds)
+        descption, err := GetDescription(fundName)
+        if err != nil {
+            log.Printf("Get all funds: %v", err)
+            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            return
+        }
+        err = bondListTmpl.Execute(w, FundDetail{fundName, descption, bonds})
         //fmt.Printf("funds: %#v\n", funds)
         if err != nil {
-            log.Printf("Transefor to html error: %v", err)
+            log.Printf("Transefor to bondListTmpl html error: %v", err)
+        }
+    case "INSERT":
+        bond := r.FormValue("bond")
+        fmt.Printf("bondsHandler insert %s to %s \n", bond, fundName)
+        if err:= InsertBond(fundName, bond); err != nil{
+            log.Printf("Insert bond error: %v", err)
+            http.Error(w, "Insert bond error", http.StatusInternalServerError)
+        }
+    case "DELETE":
+        bond := r.FormValue("bond")
+        fmt.Printf("bondsHandler delete %s from %s \n", bond, fundName)
+        if err:= RemoveBond(fundName, bond); err != nil{
+            log.Printf("Remove bond error: %v", err)
+            http.Error(w, "Remove bond error", http.StatusInternalServerError)
         }
     default:
         http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
