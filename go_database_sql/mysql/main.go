@@ -33,10 +33,7 @@ func initTemplates() {
 
 func regestHandler(){
     http.HandleFunc("/", getAllFundHandler)
-    http.HandleFunc("/bonds/{fundName:[0-9a-zA-Z_\\-]+}", bondsHandler)
-
-
-
+    http.HandleFunc("/bonds/", bondsHandler)
     port := os.Getenv("PORT")
     if port == "" {
         port = "8080"
@@ -48,7 +45,7 @@ func regestHandler(){
 }
 
 func bondsHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("r: %#v", &r)
+    fmt.Printf("bondsHandler called method", r.Method)
     /*switch r.Method {
     case "GET":
         bonds, err := GetAllfunds()
@@ -67,6 +64,7 @@ func bondsHandler(w http.ResponseWriter, r *http.Request) {
     }*/
 }
 func getAllFundHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Printf("getAllFundHandler called method", r.Method)
     switch r.Method {
     case "GET":
         funds, err := GetAllfunds()
