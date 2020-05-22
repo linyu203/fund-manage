@@ -120,15 +120,18 @@ document.getElementById("CNF").addEventListener("click", function () {
 </script>
 <script>
 	var data = []
+	var tempCt
 	{{ range .}}
+	    tempCt = {{.Creation}}
 		fund = {
-            "Name" : {{.Name}}
-            "Count": {{.Count}}
-            "Description" : {{.Description}}
-            "Creation": {{.Creation}}
+            "Name" : {{.Name}},
+            "Count": {{.Count}},
+            "Description" : {{.Description}},
+	    "Creation": tempCt.Time,
 		}
+		
+		data.push(fund)
     {{end}}
-    console.log(data)
 	loadPage(data);
 </script>
 
