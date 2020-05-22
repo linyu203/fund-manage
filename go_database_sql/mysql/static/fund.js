@@ -55,11 +55,11 @@ function loadPage(funds){
     let th = Object.keys(demo[0]);
     generateTableHead(table, th);
     if(funds !== undefined) {
-	//let data = Object.keys(funds[0]);
-	//generateTableHead(table, data);
-	generateTable(table, funds, th);
+       //let data = Object.keys(funds[0]);
+       //generateTableHead(table, data);
+        generateTable(table, funds, th);
     }else{
-	//return 
+        //return 
         generateTable(table, demo, th);
     }
     InitRow();

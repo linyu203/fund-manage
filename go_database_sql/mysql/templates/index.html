@@ -54,8 +54,11 @@
 
 <script src="{{ url_for('static', filename='fund.js') }}"></script>
 <script>
-    var data = {{funds|tojson|safe}}
-    loadPage(data);
+	console.log(.)
+	{{ range .}}
+		console.log(.)
+	{{end}}
+    //loadPage(data);
 </script>
 
 </body>
