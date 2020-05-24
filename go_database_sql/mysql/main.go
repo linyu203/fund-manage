@@ -24,21 +24,19 @@ func initTemplates() {
         bondListTmpl, err = template.ParseFiles("templates/BondList.html")
     }
     if err == nil {
-        //newFundTmpl, err = template.ParseFiles("templates/NewFund.html")
+        newFundTmpl, err = template.ParseFiles("templates/NewFund.html")
     }
     if err != nil {
         log.Fatalf("unable to parse template file: %s", err)
     }
 }
 
-
-
 func regestHandler(){
     r := mux.NewRouter()
     r.Path("/").Handler(appHandler(getAllFundHandler))
     r.Path("/bonds/{fund:[0-9a-zA-Z_\\- ]+}").Handler(appHandler(bondsHandler))
-    
-    //r.HandleFunc("/fund", fundHandler)
+    r.HandleFunc("/fund", fundHandler)
+
     http.Handle("/",r)
     port := os.Getenv("PORT")
     if port == "" {
@@ -59,6 +57,30 @@ type appHandler func(http.ResponseWriter, *http.Request)
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     fn(w,r)
+}
+
+func fundHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Printf("fundHandler called method %v %s \n", r.Method)
+    switch r.Method {
+    case "GET":
+        err := newFundTmpl.Execute(w)
+        //fmt.Printf("funds: %#v\n", funds)
+        if err != nil {
+            log.Printf("Transefor to bondListTmpl html error: %v", err)
+        }
+    case "POST":
+        name := r.FormValue("Name")
+        desc := r.FormValue("Description")
+        fmt.Printf("Create New Fund name %s des %s \n", name, desc)
+        if err:= InsertBond(fundName, bond); err != nil{
+            log.Printf("Create fund error: %v", err)
+            http.Error(w, "Create fund error", http.StatusInternalServerError)
+        }else{
+            http.Error(w, "Fund created Successfully!", http.StatusOK)
+        }
+    default:
+        http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
+    }
 }
 
 func bondsHandler(w http.ResponseWriter, r *http.Request) {
