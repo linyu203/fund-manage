@@ -31,10 +31,13 @@ func initTemplates() {
     }
 }
 
+
+
 func regestHandler(){
     r := mux.NewRouter()
-    r.HandleFunc("/", getAllFundHandler)
-    r.HandleFunc("/bonds/{fund:[0-9a-zA-Z_\\- ]+}", bondsHandler)
+    r.Path("/").Handler(appHandler(getAllFundHandler))
+    r.Path("/bonds/{fund:[0-9a-zA-Z_\\- ]+}").Handler(appHandler(bondsHandler))
+    
     //r.HandleFunc("/fund", fundHandler)
     http.Handle("/",r)
     port := os.Getenv("PORT")
@@ -50,6 +53,12 @@ type FundDetail struct {
     FundName string
     Descption string
     Bonds []Bond
+}
+
+type appHandler func(http.ResponseWriter, *http.Request)
+
+func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    fn(w,r)
 }
 
 func bondsHandler(w http.ResponseWriter, r *http.Request) {
