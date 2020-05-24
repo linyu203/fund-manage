@@ -171,23 +171,22 @@ function deleteClicked(){
         xhr.onreadystatechange = checkResponse;
 	console.log(page);
 	console.log(newbond);
-	xhr.open("DELETE", page, true);
+	xhr.open("POST", page, true);
         xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
         xhr.send("bond=" + newbond);
 	console.log(xhr);
     }
-    
 }
 
 function newElement() {
     var inputValue = document.getElementById("myInput").value;
-        if (inputValue === '') {
+    if (inputValue === '') {
         alert("You must write something!");
         return;
     } 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = checkResponse;
-    xhr.open("INSERT", page, true);
+    xhr.open("PUT", page, true);
     xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
     xhr.send("bond=" + inputValue);
 }

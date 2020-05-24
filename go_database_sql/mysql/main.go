@@ -84,20 +84,46 @@ func bondsHandler(w http.ResponseWriter, r *http.Request) {
         if err != nil {
             log.Printf("Transefor to bondListTmpl html error: %v", err)
         }
-    case "INSERT":
+    case "PUT":
         bond := r.FormValue("bond")
         fmt.Printf("bondsHandler insert %s to %s \n", bond, fundName)
         if err:= InsertBond(fundName, bond); err != nil{
             log.Printf("Insert bond error: %v", err)
             http.Error(w, "Insert bond error", http.StatusInternalServerError)
+        }else{
+	    http.Error(w, "bond inserted Successfully!", http.StatusOK)
+	}
+    case "POST":
+
+	err := r.ParseForm()
+	if err != nil {
+            fmt.Println("err ", err)
+	    http.Error(w, "parse failed", http.StatusInternalServerError)
+	}/*
+	hd := r.Header
+	for  k,v := range(hd){
+		fmt.Println("header",k,v)
+	}
+	fmt.Println("ConLength", r.ContentLength)
+	fmt.Println("Trans Encode", r.TransferEncoding)
+	fm := r.Form
+	if len(fm) == 0 {
+		fmt.Println("Form is empty")
+	}else{
+            for k,v := range(fm) {
+	        fmt.Println("Form", k, v)
+	    }
         }
-    case "DELETE":
-        bond := r.FormValue("bond")
+        fmt.Println("URI" ,  r.RequestURI)*/
+
+	bond := r.Form["bond"][0]
         fmt.Printf("bondsHandler delete %s from %s \n", bond, fundName)
         if err:= RemoveBond(fundName, bond); err != nil{
             log.Printf("Remove bond error: %v", err)
             http.Error(w, "Remove bond error", http.StatusInternalServerError)
-        }
+        } else{
+	    http.Error(w, "Bond reomved successfully!", http.StatusOK)
+	}
     default:
         http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
     }
