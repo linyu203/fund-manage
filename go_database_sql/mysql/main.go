@@ -4,7 +4,9 @@ package main
 import (
     "fmt"
     "html/template"
+    "bytes"
     "log"
+    "io"
     "net/http"
     "os"
     "github.com/gorilla/mux"
@@ -53,6 +55,12 @@ type FundDetail struct {
     Bonds []Bond
 }
 
+type NewFund struct {
+    Action string
+    Name string
+    Description string
+}
+
 type appHandler func(http.ResponseWriter, *http.Request)
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -60,24 +68,51 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func fundHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("fundHandler called method %v %s \n", r.Method)
+    fmt.Printf("fundHandler called method %v\n", r.Method)
     switch r.Method {
     case "GET":
-        err := newFundTmpl.Execute(w)
+	    err := newFundTmpl.Execute(w, nil)
         //fmt.Printf("funds: %#v\n", funds)
         if err != nil {
-            log.Printf("Transefor to bondListTmpl html error: %v", err)
+            log.Printf("Transefor to newFundTmpl html error: %v", err)
         }
     case "POST":
-        name := r.FormValue("Name")
-        desc := r.FormValue("Description")
-        fmt.Printf("Create New Fund name %s des %s \n", name, desc)
-        if err:= InsertBond(fundName, bond); err != nil{
+	defer func (){
+            http.Redirect(w, r, "/", http.StatusFound)
+	}()
+	var name, desc string
+	mr,err := r.MultipartReader()
+	if err != nil {
+	     fmt.Println("multi read faild", err)
+	}else{
+		for part,err := mr.NextPart(); err!=io.EOF; part,err = mr.NextPart() {
+			//fmt.Println(part)
+			if part.FormName() == "name" {
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(part)
+				name = buf.String()
+			}else if part.FormName() == "description"{
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(part)
+				desc = buf.String()
+			}
+		}
+	}
+
+
+        //fmt.Printf("Create New Fund name %s des %s \n", name, desc)
+	if name == "" || desc == "" {
+		log.Printf("name of decription is not valid")
+	}
+        if err:= CreateFund(name, desc); err != nil {
             log.Printf("Create fund error: %v", err)
-            http.Error(w, "Create fund error", http.StatusInternalServerError)
+            //http.Error(w, "Create fund error", http.StatusInternalServerError)
         }else{
-            http.Error(w, "Fund created Successfully!", http.StatusOK)
+	    log.Printf("Fund %s created Successfully", name)
+            //http.Error(w, "Fund created Successfully!", http.StatusOK)
+
         }
+
     default:
         http.Error(w, fmt.Sprintf("HTTP Method %s Not Allowed", r.Method), http.StatusMethodNotAllowed)
     }
@@ -108,7 +143,7 @@ func bondsHandler(w http.ResponseWriter, r *http.Request) {
         }
     case "PUT":
         bond := r.FormValue("bond")
-        fmt.Printf("bondsHandler insert %s to %s \n", bond, fundName)
+        //fmt.Printf("bondsHandler insert %s to %s \n", bond, fundName)
         if err:= InsertBond(fundName, bond); err != nil{
             log.Printf("Insert bond error: %v", err)
             http.Error(w, "Insert bond error", http.StatusInternalServerError)
@@ -116,30 +151,13 @@ func bondsHandler(w http.ResponseWriter, r *http.Request) {
 	    http.Error(w, "bond inserted Successfully!", http.StatusOK)
 	}
     case "POST":
-
 	err := r.ParseForm()
 	if err != nil {
             fmt.Println("err ", err)
 	    http.Error(w, "parse failed", http.StatusInternalServerError)
-	}/*
-	hd := r.Header
-	for  k,v := range(hd){
-		fmt.Println("header",k,v)
 	}
-	fmt.Println("ConLength", r.ContentLength)
-	fmt.Println("Trans Encode", r.TransferEncoding)
-	fm := r.Form
-	if len(fm) == 0 {
-		fmt.Println("Form is empty")
-	}else{
-            for k,v := range(fm) {
-	        fmt.Println("Form", k, v)
-	    }
-        }
-        fmt.Println("URI" ,  r.RequestURI)*/
-
 	bond := r.Form["bond"][0]
-        fmt.Printf("bondsHandler delete %s from %s \n", bond, fundName)
+        //fmt.Printf("bondsHandler delete %s from %s \n", bond, fundName)
         if err:= RemoveBond(fundName, bond); err != nil{
             log.Printf("Remove bond error: %v", err)
             http.Error(w, "Remove bond error", http.StatusInternalServerError)
@@ -161,7 +179,6 @@ func getAllFundHandler(w http.ResponseWriter, r *http.Request) {
             return
         }
         err = indexTmpl.Execute(w, funds)
-        //fmt.Printf("funds: %#v\n", funds)
         if err != nil {
             log.Printf("Transefor to html error: %v", err)
         }

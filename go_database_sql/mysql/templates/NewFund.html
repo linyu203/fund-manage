@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{action}}</title>
+    <title>Create New Fund</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -39,16 +39,16 @@ hr {
 </head>
 <body>
 
-<h3> {{ action }}</h3>
+<h3> Create New Fund</h3>
 
 <form method="POST" enctype="multipart/form-data">
     <div class="form-group">
         <label for="name">Name</label>
-        <input type="text" name="name" id="name" value="{{fund.name}}" class="form-control" placeholder="Enter a fund name" required/>
+        <input type="text" name="name" id="name" value="{{.Name}}" class="form-control" placeholder="Enter a fund name" required/>
     </div>
         <div class="form-group">
         <label for="name">Description</label>
-        <input type="dsc" name="description" id="description" value="{{fund.description}}" class="form-control" placeholder="Describe your fund" required/>
+	<input type="dsc" name="description" id="description" value="{{ .Description}}" class="form-control" placeholder="Describe your fund" required/>
     </div>
 
     <button type='submit' id="Submit" class="btn btn-success"> Submit</button>
