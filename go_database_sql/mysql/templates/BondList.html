@@ -147,9 +147,9 @@ function generateTable(table, data, th) {
         }
     }
 }
-var page="/bonds/";
-var fn = (`{{.fundName}}`).toString();
-page = page.concat(fn);
+var page="/bonds/" + {{.FundName}};
+//var fn = (`{{.FundName}}`).toString();
+//page += fn;
 function checkResponse(){
     console.log(this.readyState);
     if(this.readyState === 4){
@@ -169,9 +169,12 @@ function deleteClicked(){
         console.log(newbond)
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = checkResponse;
-        xhr.open("DELETE", page, true);
+	console.log(page);
+	console.log(newbond);
+	xhr.open("DELETE", page, true);
         xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
         xhr.send("bond=" + newbond);
+	console.log(xhr);
     }
     
 }

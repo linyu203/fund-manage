@@ -51,7 +51,7 @@ func regestHandler(){
 }
 type FundDetail struct {
     FundName string
-    Descption string
+    Description string
     Bonds []Bond
 }
 
